@@ -16,9 +16,10 @@ const CircularProgressBar = ({
   className,
   color = "stroke-primary"
 }: CircularProgressProps) => {
+  const normalizedProgress = Math.min(Math.max(progress, 0), 100);
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (progress / 100) * circumference;
+  const offset = circumference - (normalizedProgress / 100) * circumference;
 
   return (
     <div className={cn("relative inline-flex items-center justify-center", className)}>
@@ -34,7 +35,7 @@ const CircularProgressBar = ({
         />
         {/* Progress circle */}
         <circle
-          className={`progress-ring-circle ${color}`}
+          className={`progress-ring-circle ${color} transition-all duration-500 ease-in-out`}
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -49,7 +50,7 @@ const CircularProgressBar = ({
         />
       </svg>
       <div className="absolute text-lg font-semibold">
-        {Math.round(progress)}%
+        {Math.round(normalizedProgress)}%
       </div>
     </div>
   );

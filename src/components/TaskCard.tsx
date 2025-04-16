@@ -90,7 +90,7 @@ const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
   const daysRemaining = calculateDaysRemaining();
 
   return (
-    <Card>
+    <Card className="transition-all duration-300 hover:shadow-md">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg">{task.title}</CardTitle>
