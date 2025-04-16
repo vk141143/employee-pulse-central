@@ -5,6 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import CircularProgressBar from "./CircularProgressBar";
 
 export type TaskStatus = "not-started" | "in-progress" | "completed";
@@ -28,6 +38,8 @@ const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
   const [progress, setProgress] = useState(task.progress);
   const [status, setStatus] = useState<TaskStatus>(task.status);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [notes, setNotes] = useState("");
 
   const handleProgressChange = (value: number[]) => {
     setProgress(value[0]);
@@ -55,6 +67,8 @@ const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
       
       onUpdate(updatedTask);
       setIsUpdating(false);
+      setIsDialogOpen(false);
+      setNotes("");
       
       toast({
         title: "Task updated",
@@ -116,34 +130,37 @@ const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
         <div className="pt-2">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Progress</span>
-            <span className="text-sm font-medium">{progress}%</span>
+            <span className="text-sm font-medium">{task.progress}%</span>
           </div>
-          <Slider
-            value={[progress]}
-            min={0}
-            max={100}
-            step={5}
-            onValueChange={handleProgressChange}
-          />
+          <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-500 ${
+                task.status === "completed" 
+                  ? "bg-success" 
+                  : "bg-primary"
+              }`}
+              style={{ width: `${task.progress}%` }}
+            ></div>
+          </div>
         </div>
         
         <div className="flex items-center space-x-2">
           <CircularProgressBar 
-            progress={progress} 
+            progress={task.progress} 
             size={60} 
             strokeWidth={6}
-            color={status === "completed" 
+            color={task.status === "completed" 
               ? "stroke-success" 
-              : progress > 0 
+              : task.progress > 0 
                 ? "stroke-primary" 
                 : "stroke-slate-400"}
           />
           <div className="ml-2">
             <div className="text-sm font-medium">Status</div>
             <div className="text-sm">
-              {status === "completed" 
+              {task.status === "completed" 
                 ? "Completed" 
-                : progress > 0 
+                : task.progress > 0 
                   ? "In Progress" 
                   : "Not Started"}
             </div>
@@ -151,13 +168,107 @@ const TaskCard = ({ task, onUpdate }: TaskCardProps) => {
         </div>
       </CardContent>
       <CardFooter>
-        <Button 
-          onClick={handleUpdateTask} 
-          disabled={isUpdating || task.progress === progress}
-          className="w-full"
-        >
-          {isUpdating ? "Updating..." : "Update Progress"}
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              className="w-full"
+              disabled={isUpdating}
+            >
+              Update Progress
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Update Task Progress</DialogTitle>
+              <DialogDescription>
+                Update the progress for "{task.title}"
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="space-y-2">
+                <h4 className="font-medium">Current Progress: {task.progress}%</h4>
+                <p className="text-sm text-slate-500">
+                  Adjust the slider to update your progress on this task.
+                </p>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm font-medium">
+                  <span>New Progress</span>
+                  <span>{progress}%</span>
+                </div>
+                <Slider
+                  value={[progress]}
+                  min={0}
+                  max={100}
+                  step={5}
+                  onValueChange={handleProgressChange}
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="notes" className="text-sm font-medium">
+                  Progress Notes (Optional)
+                </label>
+                <Textarea
+                  id="notes"
+                  placeholder="Add details about your progress..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex items-center p-3 bg-slate-50 rounded-md">
+                <div className="w-10 h-10 mr-3">
+                  <CircularProgressBar 
+                    progress={progress} 
+                    size={40} 
+                    strokeWidth={4}
+                    color={progress === 100 
+                      ? "stroke-success" 
+                      : progress > 0 
+                        ? "stroke-primary" 
+                        : "stroke-slate-400"}
+                  />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">New Status</p>
+                  <p className="text-sm">
+                    {progress === 100 
+                      ? "Completed" 
+                      : progress > 0 
+                        ? "In Progress" 
+                        : "Not Started"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setProgress(task.progress);
+                  setStatus(task.status);
+                  setIsDialogOpen(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleUpdateTask} 
+                disabled={isUpdating || task.progress === progress}
+              >
+                {isUpdating ? "Updating..." : "Update Progress"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardFooter>
     </Card>
   );

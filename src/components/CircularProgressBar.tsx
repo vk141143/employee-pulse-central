@@ -1,5 +1,6 @@
 
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 interface CircularProgressProps {
   progress: number;
@@ -16,10 +17,20 @@ const CircularProgressBar = ({
   className,
   color = "stroke-primary"
 }: CircularProgressProps) => {
+  const [animatedProgress, setAnimatedProgress] = useState(0);
   const normalizedProgress = Math.min(Math.max(progress, 0), 100);
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const offset = circumference - (normalizedProgress / 100) * circumference;
+  const offset = circumference - (animatedProgress / 100) * circumference;
+
+  useEffect(() => {
+    // Animate the progress value
+    const timer = setTimeout(() => {
+      setAnimatedProgress(normalizedProgress);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [normalizedProgress]);
 
   return (
     <div className={cn("relative inline-flex items-center justify-center", className)}>
@@ -35,7 +46,7 @@ const CircularProgressBar = ({
         />
         {/* Progress circle */}
         <circle
-          className={`progress-ring-circle ${color} transition-all duration-500 ease-in-out`}
+          className={`progress-ring-circle ${color} transition-all duration-700 ease-out`}
           cx={size / 2}
           cy={size / 2}
           r={radius}
@@ -44,13 +55,10 @@ const CircularProgressBar = ({
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          style={{
-            animation: "progress 1s ease-out forwards",
-          }}
         />
       </svg>
       <div className="absolute text-lg font-semibold">
-        {Math.round(normalizedProgress)}%
+        {Math.round(animatedProgress)}%
       </div>
     </div>
   );
